@@ -67,6 +67,9 @@ class Particle3DoF:
 
          self.acceleration = self.forces / self.mass
 
-    def update(self, dt): # Integrates particle
+    def update_step(self, delta_t, integrator): # Integrates particle
 
-        pass
+        # Euler: next_state_vec = self.get_state_vec() + delta_t * self.get_state_vec_derivative()
+        next_state_vec = integrator(self.get_state_vec, self.get_state_vec_derivative, delta_t)
+        
+        self.update_state_vec(next_state_vec)
