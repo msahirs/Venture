@@ -24,32 +24,32 @@ class Particle3DoF:
 
         self.spawn_time = 0
 
-        self.state_vec = self.state_vec_pack()
+        self.state_vec = self.get_state_vec()
 
-        self.state_vec_derivative = self.state_vec_derivative_pack()
+        self.state_vec_derivative = self.get_state_vec_derivative()
 
 
-    def state_vec_pack(self): #Pack individual states into overall state vector:
+    def get_state_vec(self): #Pack individual states into overall state vector:
                             #  [ position
                             #    velocity ]
         
         return  np.vstack(( self.position,
                             self.velocity))
     
-    def state_vec_unpack(self, integrated_vec): #Unpacks output vector elements into respective :
+    def update_state_vec(self, integrated_vec): #Unpacks output vector elements into respective :
 
         self.position = integrated_vec[0:3,0]
 
         self.velocity = integrated_vec[3:6,0]
 
-    def state_vec_derivative_pack(self): #Pack individual derivatives of states to vector:
+    def get_state_vec_derivative(self): #Pack individual derivatives of states to vector:
                                       #  [ velocity
                                       #    acceleration]
         
         return  np.vstack(( self.velocity,
                             self.acceleration))
 
-    def net_state_vec_pack(self): #Pack individual derivatives of states to vector:
+    def get_vec_pack(self): #Pack individual derivatives of states to vector:
                                       #  [ position
                                       #    velocity
                                       #    acceleration ]
@@ -62,6 +62,10 @@ class Particle3DoF:
                                                                  #    force.y
                                                                  #    force.z ]
         self.forces = forces
+
+    def update_accel(self):
+
+         self.acceleration = self.forces / self.mass
 
     def update(self, dt): # Integrates particle
 
