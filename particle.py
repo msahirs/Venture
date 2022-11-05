@@ -36,11 +36,11 @@ class Particle3DoF:
         return  np.vstack(( self.position,
                             self.velocity))
     
-    def update_state_vec(self, integrated_vec): #Unpacks output vector elements into respective :
+    def update_state_vec(self, vec): #Unpacks vector elements into state vector:
 
-        self.position = integrated_vec[0:3,0]
+        self.position = vec[0:3,0]
 
-        self.velocity = integrated_vec[3:6,0]
+        self.velocity = vec[3:6,0]
 
     def get_state_vec_derivative(self): #Pack individual derivatives of states to vector:
                                       #  [ velocity
@@ -67,9 +67,9 @@ class Particle3DoF:
 
          self.acceleration = self.forces / self.mass
 
-    def update_step(self, delta_t, integrator): # Integrates particle
+    def update_step(self, delta_t, integrator_func): # Integrates particle
 
         # Euler: next_state_vec = self.get_state_vec() + delta_t * self.get_state_vec_derivative()
-        next_state_vec = integrator(self.get_state_vec, self.get_state_vec_derivative, delta_t)
+        next_state_vec = integrator_func(self.get_state_vec, self.get_state_vec_derivative, delta_t)
         
         self.update_state_vec(next_state_vec)
