@@ -1,8 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from Integrators import TimeIntegrators as integrate
-
-
+from Integrators import TimeIntegrator as integrate
 
 def dydt(t,y):
     rho = 1.
@@ -31,7 +29,7 @@ def dydt(t,y):
 def main():
     # ans = euler(np.array([5,2]),dydt,0,1000,0.001)
     ans = integrate.rkf45(np.array([[5,2]]).T, dydt, 0, 1000, 1, 1e-6)
-    
+    print(ans)
     plt.plot(ans[1],ans[2][0])
 
     plt.show()

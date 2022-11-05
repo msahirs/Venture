@@ -4,8 +4,6 @@ import numpy as np
 class TimeIntegrator:
     """
     Class of time-variant integrators
-    
-    
     """
 
     def __init__(self) -> None:
@@ -103,7 +101,6 @@ class TimeIntegrator:
             return y_initial, time_history, history
 
         return y_initial
-
 
 class TimeIntegratorOneStep:
     """
