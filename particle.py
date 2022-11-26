@@ -10,6 +10,7 @@ class Particle3DoF:
         
         self.position = np.zeros((3,1))
 
+
         self.velocity = np.zeros((3,1))
 
         self.acceleration = np.zeros((3,1))
@@ -38,14 +39,14 @@ class Particle3DoF:
     
     def update_state_vec(self, vec): #Unpacks vector elements into state vector:
 
-        self.position = vec[0:3,0]
+        self.position = vec[0:3,0][...,None]
 
-        self.velocity = vec[3:6,0]
+        self.velocity = vec[3:6,0][...,None]
 
     def get_state_vec_derivative(self): #Pack individual derivatives of states to vector:
                                       #  [ velocity
                                       #    acceleration]
-        
+
         return  np.vstack(( self.velocity,
                             self.acceleration))
 
@@ -58,9 +59,9 @@ class Particle3DoF:
                             self.velocity,
                             self.acceleration))
 
-    def set_forces(self,forces): # Sets forces into object array: #  [ force.x
-                                                                 #    force.y
-                                                                 #    force.z ]
+    def set_forces(self,forces): # Sets forces into object array: #  [[force.x]
+                                                                 #    [force.y]
+                                                                 #    [force.z]]
         self.forces = forces
 
     def update_accel(self):
@@ -68,8 +69,23 @@ class Particle3DoF:
          self.acceleration = self.forces / self.mass
 
     def update_step(self, delta_t, integrator_func): # Integrates particle
+        self.update_accel()
+        next_state_vec = self.get_state_vec() + delta_t * self.get_state_vec_derivative() # Euler
+        # next_state_vec = integrator_func(self.get_state_vec, self.get_state_vec_derivative, delta_t) # Parametric
 
-        # Euler: next_state_vec = self.get_state_vec() + delta_t * self.get_state_vec_derivative()
-        next_state_vec = integrator_func(self.get_state_vec, self.get_state_vec_derivative, delta_t)
-        
         self.update_state_vec(next_state_vec)
+
+def test_func():
+    particle_a = Particle3DoF(2)
+    const_g = np.array([[0,0,-9.80665]]).T
+    t_f = 2
+    particle_a.position = np.array([[0,0,500]]).T
+    steps = 1000000
+    dt = t_f/steps
+    particle_a.set_forces(const_g*2)
+    for i in range(steps):
+        
+        
+        particle_a.update_step(dt, None)
+
+    print("get_state_vec:\n",particle_a.get_state_vec())
