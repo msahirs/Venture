@@ -6,18 +6,21 @@ class Particle3DoF:
     3 DoF Particle Class. This means only translational states are stored within this class
     
     """
-    def __init__(self, mass, connectivity_matrix = None, collision_radius = 0.0001, particle_id = None) -> None:
+    def __init__(self, mass, init_state = None, connectivity_matrix = None, collision_radius = 0.0001, particle_id = None) -> None:
         
-        self.position = np.zeros((3,1))
-
-
-        self.velocity = np.zeros((3,1))
-
-        self.acceleration = np.zeros((3,1))
+        if init_state == None:
+            self.position = np.zeros((3,1))
+            self.velocity = np.zeros((3,1))
+        
+        else:
+            self.position = init_state[0:3,0][...,None]
+            self.velocity = init_state[3:6,0][...,None]
 
         self.mass = mass
 
         self.forces = np.zeros((3,1))
+
+        self.acceleration = np.zeros((3,1))
 
         self.collision_radius = collision_radius  #[m]
 
@@ -28,7 +31,7 @@ class Particle3DoF:
         self.state_vec = self.get_state_vec()
 
         self.state_vec_derivative = self.get_state_vec_derivative()
-
+        
 
     def get_state_vec(self): #Pack individual states into overall state vector:
                             #  [ position
@@ -68,14 +71,24 @@ class Particle3DoF:
 
          self.acceleration = self.forces / self.mass
 
+    def reset_force(self):
+        
+        self.forces = 0 * self.forces
+
     def update_step(self, delta_t, integrator_func): # Integrates particle
-        self.update_accel()
+        
+        self.update_accel() #compute accelerations after setting force explicitly
+
         next_state_vec = self.get_state_vec() + delta_t * self.get_state_vec_derivative() # Euler
         # next_state_vec = integrator_func(self.get_state_vec, self.get_state_vec_derivative, delta_t) # Parametric
 
-        self.update_state_vec(next_state_vec)
+        self.update_state_vec(next_state_vec) #susbtitute for t+1 state vector
 
-def test_func():
+        self.reset_force()
+        
+
+
+def test_func_3d():
     particle_a = Particle3DoF(2)
     const_g = np.array([[0,0,-9.80665]]).T
     t_f = 2
@@ -83,9 +96,17 @@ def test_func():
     steps = 1000000
     dt = t_f/steps
     particle_a.set_forces(const_g*2)
+    
     for i in range(steps):
-        
+        # print(particle_a.get_state_vec())
         
         particle_a.update_step(dt, None)
 
     print("get_state_vec:\n",particle_a.get_state_vec())
+
+test_func_3d()
+
+class particle6DoF(Particle3DoF):
+
+    def __init__(self, mass, connectivity_matrix=None, collision_radius=0.0001, particle_id=None) -> None:
+        super().__init__(mass, connectivity_matrix, collision_radius, particle_id)
