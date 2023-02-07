@@ -127,7 +127,7 @@ def test_func_3d():
 
     t_f = 10
     particle_a.position = np.array([[0,0,0]]).T
-    steps = 100
+    steps = 10
     dt = t_f/steps
     # particle_a.set_type_forces([forcing_func])
 

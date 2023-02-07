@@ -1,5 +1,5 @@
 import numpy as np
-
+import math as mt
 
 class TimeIntegrator:
     """
@@ -102,7 +102,10 @@ class TimeIntegratorOneStep:
     def __init__(self) -> None:
         pass
         
-    def rkf45_step(y_initial, dydt, t_initial, stepSize, setAdaptive = True, adaptiveMethod= "simple", adaptiveParams = 1.1, errorTol = 1e-6, setAdaptiveLogging = False):
+    def rkf45_step(y_initial, dydt, t_initial, stepSize, setAdaptive = True,
+                    adaptiveMethod= "simple", adaptiveParams = 1.1,
+                    errorTol = 1e-7, setAdaptiveLogging = False,
+                    time_tol = 10e-12):
 
         rk_A = [0, 2/9, 1/3, 3/4, 1, 5/6]
 
@@ -120,16 +123,18 @@ class TimeIntegratorOneStep:
 
         #--------------------------------------------------
         stepsize_copy = stepSize
-        original_step = stepSize
-        t_initial_copy = t_initial
-
+    
+        estimate_t_final = t_initial + stepsize_copy
+       
+        
         if setAdaptiveLogging:
             
             time_history = np.array([t_initial])
 
-        while t_initial < (t_initial_copy + original_step):
+        while t_initial < (estimate_t_final):
 
-            # print("Step size taken:", stepSize)
+            
+            print("stepsize: ", stepSize)
             
             k1 = stepSize * dydt(t_initial + rk_A[0] * stepSize,y_initial)
             k2 = stepSize * dydt(t_initial + rk_A[1] * stepSize, y_initial + rk_B[1][0] * k1)
@@ -138,7 +143,13 @@ class TimeIntegratorOneStep:
             k5 = stepSize * dydt(t_initial + rk_A[4] * stepSize, y_initial + rk_B[4][0] * k1 + rk_B[4][1] * k2 + rk_B[4][2] * k3 + rk_B[4][3] * k4)
             k6 = stepSize * dydt(t_initial + rk_A[5] * stepSize, y_initial + rk_B[5][0] * k1 + rk_B[5][1] * k2 + rk_B[5][2] * k3 + rk_B[5][3] * k4 + rk_B[5][4] * k5)
 
-            if setAdaptive:  
+            if setAdaptive:
+
+                if t_initial +  stepSize - estimate_t_final > time_tol:
+
+                    stepSize/=5
+
+                    continue
                 
                 trunc_error = np.linalg.norm(rk_CT[0] * k1 + rk_CT[1] * k2 + rk_CT[2] * k3 + rk_CT[3] * k4 + rk_CT[4] * k5 + rk_CT[5] * k6)
                 
@@ -146,6 +157,7 @@ class TimeIntegratorOneStep:
 
                     stepSize_adapted = stepSize / adaptiveParams
                     stepSize = stepSize_adapted
+                    
                     continue
 
 
@@ -159,7 +171,7 @@ class TimeIntegratorOneStep:
 
             y_initial = y_initial + rk_CH[0] * k1 + rk_CH[1] * k2 + rk_CH[2] * k3 + rk_CH[3] * k4 + rk_CH[4] * k5 + rk_CH[5] * k6
             
-            print(t_initial, " of ", t_initial_copy + original_step)
+            # print(t_initial, " of ", estimate_t_final)
             t_initial += stepSize
 
             if setAdaptiveLogging:
@@ -168,11 +180,14 @@ class TimeIntegratorOneStep:
 
             stepSize = stepsize_copy
         
+        
+        # print("### End Iter at:", t_initial, " of ", estimate_t_final)
 
         if setAdaptiveLogging:
             return y_initial, time_history
-        print("### End Iter at:", t_initial, " of ", t_initial_copy + original_step)
-        print("### NEXT ITER ###")
+
+
+        # print("### NEXT ITER ###")
 
         return y_initial
 
