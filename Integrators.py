@@ -9,7 +9,9 @@ class TimeIntegrator:
     def __init__(self) -> None:
         pass
         
-    def rkf45(self,y_initial, dydt, t_initial, t_end, stepSize, setAdaptive = True, adaptiveMethod= "simple", adaptiveParams = 1.2, errorTol = 1e-6, setAdaptiveLogging = False):
+    def rkf45(self,y_initial, dydt, t_initial, t_end, stepSize, setAdaptive = True,
+              adaptiveMethod= "simple", adaptiveParams = 1.2, errorTol = 1e-8,
+              setAdaptiveLogging = False):
 
         rk_A = [0, 2/9, 1/3, 3/4, 1, 5/6]
 
@@ -103,9 +105,9 @@ class TimeIntegratorOneStep:
         pass
         
     def rkf45_step(y_initial, dydt, t_initial, stepSize, setAdaptive = True,
-                    adaptiveMethod= "simple", adaptiveParams = 1.1,
+                    adaptiveMethod= "error", adaptiveParams = 0.9,
                     errorTol = 1e-7, setAdaptiveLogging = False,
-                    time_tol = 10e-12):
+                    time_tol = 10e-10):
 
         rk_A = [0, 2/9, 1/3, 3/4, 1, 5/6]
 
@@ -134,7 +136,7 @@ class TimeIntegratorOneStep:
         while t_initial < (estimate_t_final):
 
             
-            print("stepsize: ", stepSize)
+            # print("stepsize: ", stepSize)
             
             k1 = stepSize * dydt(t_initial + rk_A[0] * stepSize,y_initial)
             k2 = stepSize * dydt(t_initial + rk_A[1] * stepSize, y_initial + rk_B[1][0] * k1)
@@ -151,7 +153,9 @@ class TimeIntegratorOneStep:
 
                     continue
                 
-                trunc_error = np.linalg.norm(rk_CT[0] * k1 + rk_CT[1] * k2 + rk_CT[2] * k3 + rk_CT[3] * k4 + rk_CT[4] * k5 + rk_CT[5] * k6)
+                trunc_error = np.linalg.norm( rk_CT[0] * k1 + rk_CT[1] * k2 + 
+                                              rk_CT[2]* k3 + rk_CT[3] * k4 + 
+                                              rk_CT[4] * k5 + rk_CT[5] * k6   )
                 
                 if trunc_error > errorTol and adaptiveMethod == "simple":
 
@@ -169,7 +173,8 @@ class TimeIntegratorOneStep:
 
             
 
-            y_initial = y_initial + rk_CH[0] * k1 + rk_CH[1] * k2 + rk_CH[2] * k3 + rk_CH[3] * k4 + rk_CH[4] * k5 + rk_CH[5] * k6
+            y_initial += rk_CH[0] * k1 + rk_CH[1] * k2 + rk_CH[2] * k3 + \
+                         rk_CH[3] * k4 + rk_CH[4] * k5 + rk_CH[5] * k6
             
             # print(t_initial, " of ", estimate_t_final)
             t_initial += stepSize

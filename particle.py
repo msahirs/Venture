@@ -100,7 +100,8 @@ class Particle3DoF:
         
         
         # next_state_vec = self.get_state_vec() + delta_t * self.get_state_vec_derivative() # Euler
-        next_state_vec = integrate.TimeIntegratorOneStep.rkf45_step(self.get_state_vec(),forcing_func, self.spawn_time, delta_t, setAdaptive=True)
+        next_state_vec = integrate.TimeIntegratorOneStep.rkf45_step(self.get_state_vec(),forcing_func, self.spawn_time, delta_t, setAdaptive=False,)
+        # next_state_vec = integrate.TimeIntegratorOneStep.euler_step(self.get_state_vec(),forcing_func, self.spawn_time, delta_t)
         # next_state_vec = integrator_func(self.get_state_vec, self.get_state_vec_derivative, delta_t) # Parametric
         
         self.update_state_vec(next_state_vec) #substitute for t+1 state vector
@@ -112,9 +113,9 @@ class Particle3DoF:
 
 def forcing_func(t,y):
 
-    variance = 1*np.sin(t**2)
+    # variance = 1*t**1.4 - t**2
     
-    # variance = 0
+    variance = 0
 
     
     deriv = np.array((y[3:6,0],[0,0,-9.80665 - variance]))
@@ -125,9 +126,9 @@ def test_func_3d():
     particle_a = Particle3DoF(2)
     
 
-    t_f = 10
+    t_f = 100
     particle_a.position = np.array([[0,0,0]]).T
-    steps = 10
+    steps = 1000
     dt = t_f/steps
     # particle_a.set_type_forces([forcing_func])
 
@@ -135,9 +136,9 @@ def test_func_3d():
         # print(particle_a.get_state_vec())
         
         particle_a.update_step(dt, None)
-        # if i% 10000 == 0: 
+        if i% 100 == 0: 
             # print(particle_a.position)
-            # print(i*dt)
+            print(i)
 
     print("get_state_vec:\n",particle_a.get_state_vec())
 
