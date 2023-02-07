@@ -9,7 +9,7 @@ class TimeIntegrator:
     def __init__(self) -> None:
         pass
         
-    def rkf45(self,y_initial, dydt, t_initial, t_end, stepSize, setAdaptive = True, adaptiveMethod= "simple", adaptiveParams = 1.2, errorTol = 1e-6, setLogging = True):
+    def rkf45(self,y_initial, dydt, t_initial, t_end, stepSize, setAdaptive = True, adaptiveMethod= "simple", adaptiveParams = 1.2, errorTol = 1e-6, setAdaptiveLogging = False):
 
         rk_A = [0, 2/9, 1/3, 3/4, 1, 5/6]
 
@@ -28,11 +28,11 @@ class TimeIntegrator:
         #--------------------------------------------------
         stepsize_copy = stepSize
 
-        history = np.copy(y_initial)
-        
-        time_history = np.array([t_initial])
+        if setAdaptiveLogging:
+            
+            time_history = np.array([t_initial])
 
-        while t_initial < t_end and y_initial[0,0] > 0:
+        while t_initial < t_end:
 
             
             k1 = stepSize * dydt(t_initial + rk_A[0] * stepSize,y_initial)
@@ -64,27 +64,23 @@ class TimeIntegrator:
 
             t_initial += stepSize
 
-            if setLogging:
-
-                history = np.hstack((history,y_initial))
+            if setAdaptiveLogging:
 
                 time_history = np.hstack((time_history,t_initial))
 
             stepSize = stepsize_copy
         
 
-        if setLogging:
-            return y_initial, time_history, history
+        if setAdaptiveLogging:
+            return y_initial, time_history
 
         return y_initial
 
 
-    def euler(self, y_initial, dydt, t_initial, t_end, stepSize, setLogging = True):
+    def euler(self, y_initial, dydt, t_initial, t_end, stepSize, setLogging = False):
 
-        history = np.copy(y_initial)
-        time_history = np.array([stepSize])
         
-        while t_initial < t_end and y_initial[0] > 0:
+        while t_initial < t_end:
 
             y_initial = y_initial + stepSize * dydt(t_initial,y_initial)
 
@@ -92,19 +88,13 @@ class TimeIntegrator:
 
             if setLogging:
 
-                history = np.hstack((history,y_initial))
-
                 time_history = np.hstack((time_history,stepSize))
-
-
-        if setLogging:
-            return y_initial, time_history, history
 
         return y_initial
 
 class TimeIntegratorOneStep:
     """
-    Class of time-variant integrators
+    Class of time-variant integrators, to perform a single step
     
     
     """
@@ -112,7 +102,7 @@ class TimeIntegratorOneStep:
     def __init__(self) -> None:
         pass
         
-    def rkf45(self,y_initial, dydt, t_initial, t_end, stepSize, setAdaptive = True, adaptiveMethod= "simple", adaptiveParams = 1.2, errorTol = 1e-6, setLogging = True):
+    def rkf45_step(y_initial, dydt, t_initial, stepSize, setAdaptive = True, adaptiveMethod= "simple", adaptiveParams = 1.1, errorTol = 1e-6, setAdaptiveLogging = False):
 
         rk_A = [0, 2/9, 1/3, 3/4, 1, 5/6]
 
@@ -130,13 +120,16 @@ class TimeIntegratorOneStep:
 
         #--------------------------------------------------
         stepsize_copy = stepSize
+        original_step = stepSize
+        t_initial_copy = t_initial
 
-        history = np.copy(y_initial)
-        
-        time_history = np.array([t_initial])
+        if setAdaptiveLogging:
+            
+            time_history = np.array([t_initial])
 
-        while t_initial < t_end and y_initial[0,0] > 0:
+        while t_initial < (t_initial_copy + original_step):
 
+            # print("Step size taken:", stepSize)
             
             k1 = stepSize * dydt(t_initial + rk_A[0] * stepSize,y_initial)
             k2 = stepSize * dydt(t_initial + rk_A[1] * stepSize, y_initial + rk_B[1][0] * k1)
@@ -162,45 +155,30 @@ class TimeIntegratorOneStep:
                     stepSize = stepSize_adapted
                     continue
 
+            
 
             y_initial = y_initial + rk_CH[0] * k1 + rk_CH[1] * k2 + rk_CH[2] * k3 + rk_CH[3] * k4 + rk_CH[4] * k5 + rk_CH[5] * k6
-
+            
+            print(t_initial, " of ", t_initial_copy + original_step)
             t_initial += stepSize
 
-            if setLogging:
-
-                history = np.hstack((history,y_initial))
+            if setAdaptiveLogging:
 
                 time_history = np.hstack((time_history,t_initial))
 
             stepSize = stepsize_copy
         
 
-        if setLogging:
-            return y_initial, time_history, history
+        if setAdaptiveLogging:
+            return y_initial, time_history
+        print("### End Iter at:", t_initial, " of ", t_initial_copy + original_step)
+        print("### NEXT ITER ###")
 
         return y_initial
 
 
-    def euler(self, y_initial, dydt, t_initial, t_end, stepSize, setLogging = True):
-
-        history = np.copy(y_initial)
-        time_history = np.array([stepSize])
+    def euler_step(y_initial, dydt, t_initial, stepSize, setLogging = False):
         
-        while t_initial < t_end and y_initial[0] > 0:
-
-            y_initial = y_initial + stepSize * dydt(t_initial,y_initial)
-
-            t_initial += stepSize
-
-            if setLogging:
-
-                history = np.hstack((history,y_initial))
-
-                time_history = np.hstack((time_history,stepSize))
-
-
-        if setLogging:
-            return y_initial, time_history, history
+        y_initial += stepSize * dydt(t_initial,y_initial)
 
         return y_initial

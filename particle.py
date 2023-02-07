@@ -1,4 +1,6 @@
 import numpy as np
+import Integrators as integrate
+
 
 
 class Particle3DoF:
@@ -19,6 +21,8 @@ class Particle3DoF:
         self.mass = mass
 
         self.forces = np.zeros((3,1))
+
+        self.force_list = []
 
         self.acceleration = np.zeros((3,1))
 
@@ -42,6 +46,8 @@ class Particle3DoF:
     
     def update_state_vec(self, vec): #Unpacks vector elements into state vector:
 
+        # print(vec)
+
         self.position = vec[0:3,0][...,None]
 
         self.velocity = vec[3:6,0][...,None]
@@ -50,8 +56,16 @@ class Particle3DoF:
                                       #  [ velocity
                                       #    acceleration]
 
+
+        
         return  np.vstack(( self.velocity,
                             self.acceleration))
+
+
+    def get_derivative_func(self, t, y):
+
+        return np.sum([f(t,y) for f in self.force_list])
+
 
     def get_vec_pack(self): #Pack individual derivatives of states to vector:
                                       #  [ position
@@ -62,51 +76,80 @@ class Particle3DoF:
                             self.velocity,
                             self.acceleration))
 
-    def set_forces(self,forces): # Sets forces into object array: #  [[force.x]
+    def set_forces(self,forces): # Sets impulse forces into object array: #  [[force.x]
                                                                  #    [force.y]
                                                                  #    [force.z]]
         self.forces = forces
 
-    def update_accel(self):
+    def set_type_forces(self,force_funcs): # Sets types of forces into object array:
+        
+        self.force_list = force_funcs
 
-         self.acceleration = self.forces / self.mass
+    def update_accel(self,t,y):
+
+        self.forces = np.sum([f(t,y) for f in self.force_list])
+        
+        self.acceleration = self.forces / self.mass
 
     def reset_force(self):
         
-        self.forces = 0 * self.forces
+        self.forces = 0. * self.forces
 
     def update_step(self, delta_t, integrator_func): # Integrates particle
         
-        self.update_accel() #compute accelerations after setting force explicitly
-
-        next_state_vec = self.get_state_vec() + delta_t * self.get_state_vec_derivative() # Euler
-        # next_state_vec = integrator_func(self.get_state_vec, self.get_state_vec_derivative, delta_t) # Parametric
-
-        self.update_state_vec(next_state_vec) #susbtitute for t+1 state vector
-
-        self.reset_force()
         
+        
+        # next_state_vec = self.get_state_vec() + delta_t * self.get_state_vec_derivative() # Euler
+        next_state_vec = integrate.TimeIntegratorOneStep.rkf45_step(self.get_state_vec(),forcing_func, self.spawn_time, delta_t, setAdaptive=True)
+        # next_state_vec = integrator_func(self.get_state_vec, self.get_state_vec_derivative, delta_t) # Parametric
+        
+        self.update_state_vec(next_state_vec) #substitute for t+1 state vector
+        
+        self.spawn_time += delta_t
 
+        # self.reset_force()
+
+
+def forcing_func(t,y):
+
+    variance = 1*np.sin(t**2)
+    
+    # variance = 0
+
+    
+    deriv = np.array((y[3:6,0],[0,0,-9.80665 - variance]))
+
+    return deriv.reshape(6,1)
 
 def test_func_3d():
     particle_a = Particle3DoF(2)
-    const_g = np.array([[0,0,-9.80665]]).T
-    t_f = 2
-    particle_a.position = np.array([[0,0,500]]).T
-    steps = 1000000
-    dt = t_f/steps
-    particle_a.set_forces(const_g*2)
     
+
+    t_f = 10
+    particle_a.position = np.array([[0,0,0]]).T
+    steps = 100
+    dt = t_f/steps
+    # particle_a.set_type_forces([forcing_func])
+
     for i in range(steps):
         # print(particle_a.get_state_vec())
         
         particle_a.update_step(dt, None)
+        # if i% 10000 == 0: 
+            # print(particle_a.position)
+            # print(i*dt)
 
     print("get_state_vec:\n",particle_a.get_state_vec())
 
 test_func_3d()
 
+
+
 class particle6DoF(Particle3DoF):
 
-    def __init__(self, mass, connectivity_matrix=None, collision_radius=0.0001, particle_id=None) -> None:
+    def __init__(self, mass, MoI, connectivity_matrix=None, collision_radius=0.0001, particle_id=None) -> None:
+
         super().__init__(mass, connectivity_matrix, collision_radius, particle_id)
+        
+        self.MoI = MoI
+
