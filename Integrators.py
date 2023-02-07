@@ -36,7 +36,6 @@ class TimeIntegrator:
 
         while t_initial < t_end:
 
-            
             k1 = stepSize * dydt(t_initial + rk_A[0] * stepSize,y_initial)
             k2 = stepSize * dydt(t_initial + rk_A[1] * stepSize, y_initial + rk_B[1][0] * k1)
             k3 = stepSize * dydt(t_initial + rk_A[2] * stepSize, y_initial + rk_B[2][0] * k1 + rk_B[2][1] * k2)
@@ -81,7 +80,6 @@ class TimeIntegrator:
 
     def euler(self, y_initial, dydt, t_initial, t_end, stepSize, setLogging = False):
 
-        
         while t_initial < t_end:
 
             y_initial = y_initial + stepSize * dydt(t_initial,y_initial)
@@ -97,7 +95,6 @@ class TimeIntegrator:
 class TimeIntegratorOneStep:
     """
     Class of time-variant integrators, to perform a single step
-    
     
     """
 
@@ -128,14 +125,12 @@ class TimeIntegratorOneStep:
     
         estimate_t_final = t_initial + stepsize_copy
        
-        
         if setAdaptiveLogging:
             
             time_history = np.array([t_initial])
 
         while t_initial < (estimate_t_final):
 
-            
             # print("stepsize: ", stepSize)
             
             k1 = stepSize * dydt(t_initial + rk_A[0] * stepSize,y_initial)
@@ -150,12 +145,11 @@ class TimeIntegratorOneStep:
                 if t_initial +  stepSize - estimate_t_final > time_tol:
 
                     stepSize/=5
-
                     continue
                 
                 trunc_error = np.linalg.norm( rk_CT[0] * k1 + rk_CT[1] * k2 + 
                                               rk_CT[2]* k3 + rk_CT[3] * k4 + 
-                                              rk_CT[4] * k5 + rk_CT[5] * k6   )
+                                              rk_CT[4] * k5 + rk_CT[5] * k6  )
                 
                 if trunc_error > errorTol and adaptiveMethod == "simple":
 
@@ -164,14 +158,12 @@ class TimeIntegratorOneStep:
                     
                     continue
 
-
                 elif trunc_error > errorTol and adaptiveMethod == "error":
 
                     stepSize_adapted = adaptiveParams * stepSize * (errorTol/trunc_error)**(0.2)
                     stepSize = stepSize_adapted
                     continue
 
-            
 
             y_initial += rk_CH[0] * k1 + rk_CH[1] * k2 + rk_CH[2] * k3 + \
                          rk_CH[3] * k4 + rk_CH[4] * k5 + rk_CH[5] * k6
@@ -180,25 +172,20 @@ class TimeIntegratorOneStep:
             t_initial += stepSize
 
             if setAdaptiveLogging:
-
                 time_history = np.hstack((time_history,t_initial))
 
             stepSize = stepsize_copy
-        
         
         # print("### End Iter at:", t_initial, " of ", estimate_t_final)
 
         if setAdaptiveLogging:
             return y_initial, time_history
 
-
         # print("### NEXT ITER ###")
-
         return y_initial
 
 
     def euler_step(y_initial, dydt, t_initial, stepSize, setLogging = False):
         
         y_initial += stepSize * dydt(t_initial,y_initial)
-
         return y_initial

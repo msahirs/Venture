@@ -2,7 +2,6 @@ import numpy as np
 import Integrators as integrate
 
 
-
 class Particle3DoF:
     """
     3 DoF Particle Class. This means only translational states are stored within this class
@@ -56,8 +55,6 @@ class Particle3DoF:
                                       #  [ velocity
                                       #    acceleration]
 
-
-        
         return  np.vstack(( self.velocity,
                             self.acceleration))
 
@@ -97,8 +94,6 @@ class Particle3DoF:
 
     def update_step(self, delta_t, integrator_func): # Integrates particle
         
-        
-        
         # next_state_vec = self.get_state_vec() + delta_t * self.get_state_vec_derivative() # Euler
         next_state_vec = integrate.TimeIntegratorOneStep.rkf45_step(self.get_state_vec(),forcing_func, self.spawn_time, delta_t, setAdaptive=False,)
         # next_state_vec = integrate.TimeIntegratorOneStep.euler_step(self.get_state_vec(),forcing_func, self.spawn_time, delta_t)
@@ -116,19 +111,18 @@ def forcing_func(t,y):
     # variance = 1*t**1.4 - t**2
     
     variance = 0
-
     
     deriv = np.array((y[3:6,0],[0,0,-9.80665 - variance]))
 
     return deriv.reshape(6,1)
 
 def test_func_3d():
+
     particle_a = Particle3DoF(2)
     
-
-    t_f = 100
+    t_f = 10000
     particle_a.position = np.array([[0,0,0]]).T
-    steps = 1000
+    steps = 10000
     dt = t_f/steps
     # particle_a.set_type_forces([forcing_func])
 
@@ -143,7 +137,6 @@ def test_func_3d():
     print("get_state_vec:\n",particle_a.get_state_vec())
 
 test_func_3d()
-
 
 
 class particle6DoF(Particle3DoF):
