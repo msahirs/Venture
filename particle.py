@@ -88,7 +88,7 @@ class Particle3DoF:
     def update_step(self, delta_t, integrator_func): # Integrates particle
         
         # next_state_vec = self.get_state_vec() + delta_t * self.get_state_vec_derivative() # Euler
-        next_state_vec = integrate.TimeIntegratorOneStep.rkf45_step(self.get_state_vec(),forcing_func, self.spawn_time, delta_t, setAdaptive=True,)
+        next_state_vec = integrate.TimeIntegratorOneStep.rkf45_step(self.get_state_vec(),forcing_func, self.spawn_time, delta_t, setAdaptive=False,)
         # next_state_vec = integrate.TimeIntegratorOneStep.euler_step(self.get_state_vec(),forcing_func, self.spawn_time, delta_t)
         # next_state_vec = integrator_func(self.get_state_vec, self.get_state_vec_derivative, delta_t) # Parametric
         
@@ -97,6 +97,14 @@ class Particle3DoF:
         self.spawn_time += delta_t
 
         # self.reset_force()
+
+class particle6DoF(Particle3DoF):
+
+    def __init__(self, mass, MoI, connectivity_matrix=None, collision_radius=0.0001, particle_id=None) -> None:
+
+        super().__init__(mass, connectivity_matrix, collision_radius, particle_id)
+        
+        self.MoI = MoI
 
 
 def forcing_func(t,y):
@@ -112,13 +120,13 @@ def forcing_func(t,y):
 
     return deriv.reshape(6,1)
 
-def test_func_3d():
+def __main__():
 
     particle_a = Particle3DoF(1)
     
     t_f = 20
     particle_a.position = np.array([[0,0,500]]).T
-    steps = 100
+    steps = 1000
     dt = t_f/steps
     # particle_a.set_type_forces([forcing_func])
 
@@ -132,15 +140,9 @@ def test_func_3d():
 
     print("get_state_vec:\n",particle_a.get_state_vec())
 
+# cProfile.run("__main__()")
 
-test_func_3d()
+if __name__ == "__main__":
+    __main__()
 
-
-class particle6DoF(Particle3DoF):
-
-    def __init__(self, mass, MoI, connectivity_matrix=None, collision_radius=0.0001, particle_id=None) -> None:
-
-        super().__init__(mass, connectivity_matrix, collision_radius, particle_id)
-        
-        self.MoI = MoI
 

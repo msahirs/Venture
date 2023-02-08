@@ -1,8 +1,8 @@
 import numpy as np
 
-FORCE_TYPES = ["drag","gravity"]
+FORCE_TYPES = ["Drag","Gravity"]
 
-class Force_collection():
+class Force_collection:
 
     def __init__(self,keys, ) -> None:
 
@@ -38,22 +38,68 @@ class Force_collection():
 
         sum = np.sum([func.eval(t,y) for func in self.force_keys])
 
+    def print_forceSummary(self):
 
-class Drag():
+        for i in self.force_keys:
+            print("Class type is", i.base_info(),", with ID =", i.get_ID())
+
+
+
+class Force:
     def __init__(self, ID,) -> None:
-        pass
+
+        self.ID = ID
 
     @staticmethod
     def base_info():
-        return "drag"
+        return "Force parent class"
 
-class Gravity():
-    def __init__(self, ID,) -> None:
+    
+    def get_ID(self):
+        return self.ID
+
+    def eval(self,t,y):
         pass
+
+    
+class Drag(Force):
+    def __init__(self,ID) -> None:
+
+        super().__init__(ID)
 
     @staticmethod
     def base_info():
-        return "gravity"
+        return "<Drag>"
+
+    def eval(self, t, y):
+        from drag import calculate_drag
+
+        calculate_drag()
+
+class Gravity(Force):
+    def __init__(self, ID,) -> None:
+        
+        super().__init__(ID)
+
+    @staticmethod
+    def base_info():
+        return "<Gravity>"
+
+    def eval(self, t, y):
+        from gravity import CONST_G
+
+        CONST_G()
 
 
-Force_collection([Drag("drag_1"), Gravity("gravity_1")])
+drag_1 = Drag("drag_1")
+gravity_1 = Gravity("gravity_1")
+
+
+a = Force_collection([drag_1, gravity_1])
+
+a.print_forceSummary()
+
+
+
+
+
