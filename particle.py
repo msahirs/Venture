@@ -18,24 +18,17 @@ class Particle3DoF:
             self.velocity = init_state[3:6,0][...,None]
 
         self.mass = mass
-
         self.forces = np.zeros((3,1))
-
         self.force_list = []
-
         self.acceleration = np.zeros((3,1))
 
         self.collision_radius = collision_radius  #[m]
-
         self.particle_id = particle_id
-
         self.spawn_time = 0
 
         self.state_vec = self.get_state_vec()
-
         self.state_vec_derivative = self.get_state_vec_derivative()
         
-
     def get_state_vec(self): #Pack individual states into overall state vector:
                             #  [ position
                             #    velocity ]
@@ -95,7 +88,7 @@ class Particle3DoF:
     def update_step(self, delta_t, integrator_func): # Integrates particle
         
         # next_state_vec = self.get_state_vec() + delta_t * self.get_state_vec_derivative() # Euler
-        next_state_vec = integrate.TimeIntegratorOneStep.rkf45_step(self.get_state_vec(),forcing_func, self.spawn_time, delta_t, setAdaptive=False,)
+        next_state_vec = integrate.TimeIntegratorOneStep.rkf45_step(self.get_state_vec(),forcing_func, self.spawn_time, delta_t, setAdaptive=True,)
         # next_state_vec = integrate.TimeIntegratorOneStep.euler_step(self.get_state_vec(),forcing_func, self.spawn_time, delta_t)
         # next_state_vec = integrator_func(self.get_state_vec, self.get_state_vec_derivative, delta_t) # Parametric
         
@@ -108,21 +101,24 @@ class Particle3DoF:
 
 def forcing_func(t,y):
 
+    rho = 1
     # variance = 1*t**1.4 - t**2
+    q = 0.5 * rho * np.abs(y[3:6,0]) * y[3:6,0]
+
+    drag = - q * 1 * 0.1
     
-    variance = 0
-    
-    deriv = np.array((y[3:6,0],[0,0,-9.80665 - variance]))
+    g = np.array([0,0,-9.80665])
+    deriv = np.array((y[3:6,0], g + drag))
 
     return deriv.reshape(6,1)
 
 def test_func_3d():
 
-    particle_a = Particle3DoF(2)
+    particle_a = Particle3DoF(1)
     
-    t_f = 10000
-    particle_a.position = np.array([[0,0,0]]).T
-    steps = 10000
+    t_f = 20
+    particle_a.position = np.array([[0,0,500]]).T
+    steps = 100
     dt = t_f/steps
     # particle_a.set_type_forces([forcing_func])
 
@@ -130,11 +126,12 @@ def test_func_3d():
         # print(particle_a.get_state_vec())
         
         particle_a.update_step(dt, None)
-        if i% 100 == 0: 
-            # print(particle_a.position)
-            print(i)
+        # if i% 100 == 0: 
+        #     # print(particle_a.position)
+        #     print(i)
 
     print("get_state_vec:\n",particle_a.get_state_vec())
+
 
 test_func_3d()
 

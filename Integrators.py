@@ -103,7 +103,7 @@ class TimeIntegratorOneStep:
         
     def rkf45_step(y_initial, dydt, t_initial, stepSize, setAdaptive = True,
                     adaptiveMethod= "error", adaptiveParams = 0.9,
-                    errorTol = 1e-7, setAdaptiveLogging = False,
+                    errorTol = 1e-6, setAdaptiveLogging = False,
                     time_tol = 10e-10):
 
         rk_A = [0, 2/9, 1/3, 3/4, 1, 5/6]
@@ -144,7 +144,7 @@ class TimeIntegratorOneStep:
 
                 if t_initial +  stepSize - estimate_t_final > time_tol:
 
-                    stepSize/=5
+                    stepSize/=10
                     continue
                 
                 trunc_error = np.linalg.norm( rk_CT[0] * k1 + rk_CT[1] * k2 + 
@@ -168,7 +168,7 @@ class TimeIntegratorOneStep:
             y_initial += rk_CH[0] * k1 + rk_CH[1] * k2 + rk_CH[2] * k3 + \
                          rk_CH[3] * k4 + rk_CH[4] * k5 + rk_CH[5] * k6
             
-            # print(t_initial, " of ", estimate_t_final)
+            
             t_initial += stepSize
 
             if setAdaptiveLogging:
